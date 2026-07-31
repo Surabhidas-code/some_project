@@ -1,0 +1,113 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body{
+    font-family: 'Times New Roman', Times, serif;
+    background-color: #f4f4f4;
+    color: #222;
+    line-height: 1,6;
+}
+header{
+    background-color: #1e293b;
+    color: white;
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+header h1{
+    font-size: 24px;
+}
+nav a{
+    color: white;
+    text-decoration: none;
+    margin-left: 25px;
+    font-size: 16px;
+}
+nav a:hover{
+    color: #38bdf8;
+}
+.hero{
+    background-color: #334155;
+    color: white;
+    text-align: center;
+    padding: 80px 20px;
+}
+.hero h2{
+    font-size: 36px;
+    margin-bottom: 15px;
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+.hero p{
+    font-size: 18px;
+    color: #cbd5e1;
+    max-width: 600px;
+    margin: 0 auto 25px auto;
+}
+.btn{
+    display: inline-block;
+    background-color: #38bdf8;
+    color: #1e293b;
+    padding: 12px 28px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+}
+section{
+    padding: 60px 40px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+section h3{
+    font-size: 28px;
+    margin-bottom: 20px;
+    border-left: 5px solid #38bdf8;
+    padding-left: 12px;
+}
+.skills{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 20px;
+}
+.skill-card{
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    flex: 1 1 150px;
+    text-align: center;
+}
+.contact{
+    background-color: #e28ef0;
+}
+.contact form{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 500px;
+}
+.contact input, .contact textarea{
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 15px;
+}
+.contact button{
+    background-color: #1e293b;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+}
+footer{
+    text-align: center;
+    padding: 20px;
+    background-color: #1e293b;
+    color: #cbd5e1;
+    font-size: 14px;
+}
