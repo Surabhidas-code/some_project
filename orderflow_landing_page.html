@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f7f8f4" />
+  <meta name="description" content="Manage products, orders, bills, stock, customers, expenses and profit with a simple Google Sheets template." />
+  <title>OrderFlow — Order, Bill & Profit Manager</title>
+  <style>
+    :root {
+      --ink: #172923;
+      --muted: #66756e;
+      --green: #176b50;
+      --green-dark: #10543e;
+      --mint: #dff2e8;
+      --cream: #f7f8f4;
+      --white: #ffffff;
+      --line: #e5ebe5;
+      --orange: #e6a45a;
+      --shadow: 0 24px 70px rgba(22, 55, 42, .11);
+      --radius: 24px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--cream);
+      line-height: 1.6;
+    }
+    a { color: inherit; text-decoration: none; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    .container { width: min(1160px, calc(100% - 40px)); margin-inline: auto; }
+    .site-header {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(247, 248, 244, .88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(229,235,229,.8);
+    }
+    .nav { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: inline-flex; align-items: center; gap: 11px; font-weight: 800; letter-spacing: -.04em; font-size: 1.12rem; }
+    .brand-mark { width: 38px; height: 38px; border-radius: 13px; display: grid; place-items: center; color: #fff; background: var(--green); box-shadow: 0 8px 20px #176b5030; }
+    .brand-mark svg { width: 22px; height: 22px; }
+    .nav-links { display: flex; align-items: center; gap: 30px; color: #52635a; font-size: .92rem; font-weight: 600; }
+    .nav-links a:not(.btn):hover { color: var(--green); }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+      border: 1px solid transparent; border-radius: 999px; padding: 13px 21px;
+      font: inherit; font-size: .94rem; font-weight: 750; cursor: pointer;
+      transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:focus-visible, a:focus-visible, button:focus-visible { outline: 3px solid #f0b96f; outline-offset: 4px; }
+    .btn-primary { color: #fff; background: var(--green); box-shadow: 0 10px 24px #176b5028; }
+    .btn-primary:hover { background: var(--green-dark); box-shadow: 0 14px 28px #176b5038; }
+    .btn-light { background: #fff; border-color: var(--line); color: var(--ink); }
+    .btn-light:hover { box-shadow: 0 8px 22px #17292312; }
+    .btn svg { width: 17px; height: 17px; }
+    .menu-toggle { display: none; border: 1px solid var(--line); border-radius: 12px; width: 44px; height: 44px; background: #fff; color: var(--ink); cursor: pointer; }
+    .menu-toggle svg { width: 22px; height: 22px; }
+    .hero { position: relative; overflow: hidden; padding: 78px 0 82px; }
+    .hero::before { content: ""; position: absolute; width: 560px; height: 560px; border-radius: 50%; background: radial-gradient(circle, #dff2e8 0%, #dff2e800 70%); top: -180px; right: -150px; pointer-events: none; }
+    .hero-grid { position: relative; display: grid; grid-template-columns: 1.02fr .98fr; align-items: center; gap: 58px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; color: var(--green); background: #e8f4ed; border: 1px solid #d3e9db; border-radius: 999px; padding: 7px 12px; font-size: .79rem; font-weight: 800; letter-spacing: .03em; }
+    .eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: #2a9b6c; box-shadow: 0 0 0 4px #2a9b6c1b; }
+    h1 { font-size: clamp(2.7rem, 5.4vw, 4.65rem); letter-spacing: -.065em; line-height: 1.04; margin: 22px 0 20px; max-width: 650px; }
+    h1 .highlight { color: var(--green); }
+    .hero-copy { color: var(--muted); font-size: 1.1rem; max-width: 550px; margin: 0; }
+    .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 13px; margin-top: 30px; }
+    .micro-note { display: flex; align-items: center; gap: 8px; margin-top: 19px; color: #718078; font-size: .83rem; }
+    .micro-note svg { width: 16px; height: 16px; color: var(--green); }
+    .product-visual { position: relative; padding: 17px; border: 1px solid #e0e9e1; background: rgba(255,255,255,.68); border-radius: 30px; box-shadow: var(--shadow); transform: rotate(.5deg); }
+    .mock-window { border: 1px solid #e7ece7; background: #fff; border-radius: 19px; overflow: hidden; }
+    .mock-top { padding: 14px 17px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #edf0ed; }
+    .window-dots { display: flex; gap: 5px; }
+    .window-dots i { display: block; width: 7px; height: 7px; border-radius: 50%; background: #d6ded7; }
+    .mock-label { font-size: .75rem; font-weight: 800; color: #4b5c52; }
+    .mock-badge { font-size: .65rem; color: var(--green); background: #e6f5eb; border-radius: 999px; padding: 5px 8px; font-weight: 800; }
+    .mock-body { padding: 19px; }
+    .mock-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .mock-heading h3 { margin: 0; font-size: 1.02rem; letter-spacing: -.03em; }
+    .mock-heading p { margin: 3px 0 0; font-size: .69rem; color: #87928b; }
+    .month-chip { background: #f5f7f4; border: 1px solid #e9ede8; padding: 6px 9px; border-radius: 8px; font-size: .65rem; color: #65746b; white-space: nowrap; }
+    .stat-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
+    .stat-card { border: 1px solid #edf0ed; border-radius: 13px; padding: 13px; min-width: 0; }
+    .stat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #718078; font-size: .68rem; }
+    .stat-icon { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 8px; background: #e8f4ed; color: var(--green); }
+    .stat-icon svg { width: 14px; height: 14px; }
+    .stat-value { display: block; font-size: 1.28rem; line-height: 1.35; letter-spacing: -.04em; font-weight: 850; margin-top: 8px; }
+    .stat-change { font-size: .64rem; color: #27815b; margin-top: 3px; }
+    .table-title { display: flex; align-items: center; justify-content: space-between; margin: 20px 0 9px; font-size: .78rem; font-weight: 800; }
+    .table-title span:last-child { font-size: .65rem; color: var(--green); }
+    .mini-table { width: 100%; border-collapse: collapse; font-size: .67rem; text-align: left; }
+    .mini-table th { color: #8a968e; font-weight: 650; background: #f8faf7; }
+    .mini-table th, .mini-table td { padding: 10px 8px; border-bottom: 1px solid #eff2ef; white-space: nowrap; }
+    .mini-table td { color: #405148; font-weight: 600; }
+    .status { display: inline-block; border-radius: 999px; padding: 3px 7px; font-size: .59rem; font-weight: 800; }
+    .status.paid { background: #e4f5e9; color: #26744d; }
+    .status.pending { background: #fff1dc; color: #98621c; }
+    .floating-note { position: absolute; right: -25px; bottom: 38px; display: flex; align-items: center; gap: 11px; padding: 13px 16px; background: #fff; border: 1px solid #e8eee8; border-radius: 16px; box-shadow: 0 14px 38px #193b2b1c; transform: rotate(-2deg); }
+    .floating-icon { width: 37px; height: 37px; display: grid; place-items: center; border-radius: 12px; background: #fff2df; color: #a76b21; }
+    .floating-icon svg { width: 19px; height: 19px; }
+    .floating-note strong { display: block; font-size: .82rem; }
+    .floating-note small { display: block; font-size: .69rem; color: #7a887f; }
+    .trust-strip { padding: 20px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: #fff9; }
+    .trust-inner { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 22px 42px; color: #65756c; font-size: .88rem; font-weight: 650; }
+    .trust-item { display: flex; align-items: center; gap: 9px; }
+    .trust-item svg { width: 19px; height: 19px; color: var(--green); }
+    section.content-section { padding: 90px 0; }
+    .section-heading { text-align: center; max-width: 690px; margin: 0 auto 42px; }
+    .section-kicker { color: var(--green); text-transform: uppercase; font-size: .76rem; font-weight: 850; letter-spacing: .14em; }
+    h2 { margin: 10px 0 13px; font-size: clamp(2rem, 3.8vw, 3.15rem); letter-spacing: -.055em; line-height: 1.1; }
+    .section-heading p { color: var(--muted); margin: 0; font-size: 1.02rem; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 17px; }
+    .feature-card { padding: 26px; background: #fff; border: 1px solid var(--line); border-radius: 20px; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+    .feature-card:hover { transform: translateY(-5px); border-color: #c6dfce; box-shadow: 0 16px 38px #173b2910; }
+    .feature-icon { width: 47px; height: 47px; display: grid; place-items: center; border-radius: 15px; color: var(--green); background: #e8f4ed; margin-bottom: 19px; }
+    .feature-icon svg { width: 23px; height: 23px; }
+    .feature-card h3 { margin: 0 0 8px; font-size: 1.08rem; letter-spacing: -.025em; }
+    .feature-card p { margin: 0; color: var(--muted); font-size: .92rem; }
+    .how-section { background: #edf4ed; }
+    .steps-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+    .step { padding: 22px 18px; background: rgba(255,255,255,.8); border: 1px solid #dce9dd; border-radius: 18px; }
+    .step-number { display: grid; place-items: center; width: 35px; height: 35px; border-radius: 11px; background: var(--green); color: #fff; font-size: .85rem; font-weight: 850; margin-bottom: 17px; }
+    .step h3 { margin: 0 0 8px; font-size: .99rem; }
+    .step p { margin: 0; color: var(--muted); font-size: .84rem; }
+    .audience-grid { display: grid; grid-template-columns: .85fr 1.15fr; align-items: center; gap: 58px; }
+    .audience-copy h2 { margin-top: 12px; }
+    .audience-copy p { color: var(--muted); }
+    .audience-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 25px; }
+    .audience-pill { display: flex; align-items: center; gap: 10px; padding: 14px; background: #fff; border: 1px solid var(--line); border-radius: 14px; font-size: .9rem; font-weight: 700; }
+    .audience-pill svg { width: 19px; height: 19px; flex: 0 0 auto; color: var(--green); }
+    .callout-card { background: var(--green); color: #fff; border-radius: 28px; padding: 34px; position: relative; overflow: hidden; }
+    .callout-card::after { content: ""; position: absolute; width: 250px; height: 250px; border-radius: 50%; border: 1px solid #ffffff22; right: -70px; top: -80px; box-shadow: 0 0 0 30px #ffffff09, 0 0 0 60px #ffffff06; }
+    .callout-card h3 { position: relative; z-index: 1; margin: 0 0 12px; font-size: 1.55rem; letter-spacing: -.04em; }
+    .callout-card p { position: relative; z-index: 1; color: #d4e9dd; margin: 0 0 23px; max-width: 410px; }
+    .callout-card .btn { position: relative; z-index: 1; color: var(--green-dark); background: #fff; }
+    .faq-list { max-width: 800px; margin: 0 auto; display: grid; gap: 11px; }
+    .faq-item { border: 1px solid var(--line); background: #fff; border-radius: 16px; overflow: hidden; }
+    .faq-question { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 18px; text-align: left; border: 0; padding: 20px 22px; color: var(--ink); background: transparent; font: inherit; font-weight: 750; cursor: pointer; }
+    .faq-question svg { width: 19px; height: 19px; flex: 0 0 auto; transition: transform .2s ease; }
+    .faq-answer { display: none; padding: 0 22px 20px; color: var(--muted); font-size: .93rem; }
+    .faq-item.open .faq-answer { display: block; }
+    .faq-item.open .faq-question svg { transform: rotate(180deg); }
+    .final-cta { padding: 0 0 90px; }
+    .final-cta-box { padding: 54px 25px; border-radius: 30px; text-align: center; background: linear-gradient(135deg, #e2f2e8, #f2f7ed); border: 1px solid #d9eadd; }
+    .final-cta-box h2 { max-width: 650px; margin: 0 auto 14px; }
+    .final-cta-box p { max-width: 580px; margin: 0 auto 25px; color: var(--muted); }
+    footer { border-top: 1px solid var(--line); padding: 26px 0; }
+    .footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; color: #718078; font-size: .83rem; }
+    .footer-brand { color: var(--ink); font-weight: 800; }
+    .footer-links { display: flex; gap: 18px; }
+    .footer-links a:hover { color: var(--green); }
+    .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } .reveal { opacity: 1; transform: none; } }
+    @media (max-width: 980px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+      .hero-copy, h1 { max-width: 740px; }
+      .product-visual { width: min(620px, 100%); margin: 0 auto; }
+      .steps-grid { grid-template-columns: repeat(3, 1fr); }
+      .audience-grid { gap: 30px; }
+      .floating-note { right: -8px; }
+    }
+    @media (max-width: 720px) {
+      .container { width: min(100% - 30px, 560px); }
+      .nav { min-height: 68px; }
+      .menu-toggle { display: grid; place-items: center; }
+      .nav-links { display: none; position: absolute; top: 68px; left: 0; right: 0; padding: 18px 20px 22px; background: var(--cream); border-bottom: 1px solid var(--line); flex-direction: column; align-items: stretch; gap: 17px; box-shadow: 0 20px 30px #1729230b; }
+      .nav-links.open { display: flex; }
+      .nav-links .btn { width: 100%; }
+      .hero { padding: 53px 0 60px; }
+      h1 { font-size: clamp(2.45rem, 11vw, 3.55rem); }
+      .hero-copy { font-size: 1rem; }
+      .hero-actions { align-items: stretch; flex-direction: column; }
+      .hero-actions .btn { width: 100%; }
+      .product-visual { padding: 9px; border-radius: 23px; }
+      .mock-body { padding: 12px; }
+      .mock-top { padding: 11px 12px; }
+      .mini-table th, .mini-table td { padding: 9px 5px; font-size: .61rem; }
+      .stat-card { padding: 10px; }
+      .stat-value { font-size: 1.1rem; }
+      .floating-note { right: 4px; bottom: -21px; padding: 10px 12px; }
+      .trust-inner { gap: 14px 20px; justify-content: flex-start; font-size: .78rem; }
+      section.content-section { padding: 66px 0; }
+      .features-grid { grid-template-columns: 1fr; }
+      .feature-card { padding: 22px; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .step { display: grid; grid-template-columns: 38px 1fr; column-gap: 13px; padding: 17px; }
+      .step-number { grid-row: span 2; margin: 0; }
+      .step h3 { align-self: end; }
+      .audience-grid { grid-template-columns: 1fr; gap: 27px; }
+      .audience-list { grid-template-columns: 1fr 1fr; }
+      .callout-card { padding: 27px; }
+      .final-cta { padding-bottom: 65px; }
+      .final-cta-box { padding: 39px 21px; }
+      .footer-inner { flex-direction: column; align-items: flex-start; }
+    }
+    @media (max-width: 390px) {
+      .brand { font-size: 1rem; }
+      .brand-mark { width: 35px; height: 35px; }
+      .audience-list { grid-template-columns: 1fr; }
+      .month-chip { display: none; }
+      .mock-heading { align-items: flex-start; }
+      .mini-table { font-size: .58rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="#home" aria-label="OrderFlow home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 5.5h14v13H5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 9h8M8 12.5h3M14 12.5h2M8 16h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </span>
+        <span>OrderFlow</span>
+      </a>
+      <button class="menu-toggle" id="menuToggle" aria-label="Open navigation menu" aria-expanded="false" aria-controls="navLinks">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <nav class="nav-links" id="navLinks" aria-label="Main navigation">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#faq">FAQ</a>
+        <a class="btn btn-primary" href="https://kreato.co.in/digitaldock/3f9ea274-d27b-4673-923e-694f5d7f46cf" target="_blank" rel="noopener noreferrer">Get the Template <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="container hero-grid">
+        <div class="hero-content reveal">
+          <span class="eyebrow"><span class="eyebrow-dot"></span> A smarter way to manage your small business</span>
+          <h1>Orders, bills & profits. <span class="highlight">All in one simple sheet.</span></h1>
+          <p class="hero-copy">Keep your products, customer orders, stock, expenses and pending payments organised with a practical Google Sheets manager—without juggling multiple registers.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="https://kreato.co.in/digitaldock/3f9ea274-d27b-4673-923e-694f5d7f46cf" target="_blank" rel="noopener noreferrer">Get the Template <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <a class="btn btn-light" href="#features">Explore features <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></a>
+          </div>
+          <div class="micro-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg> A spreadsheet template designed for day-to-day business tracking</div>
+        </div>
+
+        <div class="product-visual reveal" aria-label="Illustration of the OrderFlow spreadsheet dashboard">
+          <div class="mock-window">
+            <div class="mock-top">
+              <div class="window-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+              <span class="mock-label">ORDER + BILL + PROFIT MANAGER</span>
+              <span class="mock-badge">SHEETS TEMPLATE</span>
+            </div>
+            <div class="mock-body">
+              <div class="mock-heading">
+                <div><h3>Business overview</h3><p>A quick look at your activity</p></div>
+                <span class="month-chip">This month ▾</span>
+              </div>
+              <div class="stat-grid">
+                <div class="stat-card">
+                  <div class="stat-top"><span>Sales tracked</span><span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5M4 19h17M8 15l4-4 3 3 5-7"/></svg></span></div>
+                  <strong class="stat-value">₹24,850</strong><div class="stat-change">↗ Order totals</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-top"><span>Pending balance</span><span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span></div>
+                  <strong class="stat-value">₹2,400</strong><div class="stat-change" style="color:#b37a2c">Needs follow-up</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-top"><span>Stock status</span><span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></svg></span></div>
+                  <strong class="stat-value">3 alerts</strong><div class="stat-change" style="color:#b37a2c">Low stock items</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-top"><span>Expenses logged</span><span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/></svg></span></div>
+                  <strong class="stat-value">₹4,200</strong><div class="stat-change">↗ Expense records</div>
+                </div>
+              </div>
+              <div class="table-title"><span>Recent orders</span><span>View all orders ↗</span></div>
+              <table class="mini-table" aria-label="Sample orders table">
+                <thead><tr><th>ORDER</th><th>CUSTOMER</th><th>AMOUNT</th><th>STATUS</th></tr></thead>
+                <tbody>
+                  <tr><td>#INV-104</td><td>Riya S.</td><td>₹1,250</td><td><span class="status paid">Paid</span></td></tr>
+                  <tr><td>#INV-105</td><td>Aman K.</td><td>₹850</td><td><span class="status pending">Pending</span></td></tr>
+                  <tr><td>#INV-106</td><td>Neha D.</td><td>₹2,100</td><td><span class="status paid">Paid</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="floating-note">
+            <span class="floating-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 8h8M8 12h8M8 16h4"/></svg></span>
+            <span><strong>Bill-ready workflow</strong><small>Prepare a bill for PDF export</small></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="trust-strip">
+      <div class="container trust-inner">
+        <span class="trust-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4zM8 9h8M8 13h8M8 17h4"/></svg> Orders & bills</span>
+        <span class="trust-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18v13H3zM7 7V4h10v3M7 12h10"/></svg> Product & stock tracking</span>
+        <span class="trust-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg> Customer follow-ups</span>
+        <span class="trust-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5M4 19h17M8 15l4-4 3 3 5-7"/></svg> Profit & expense visibility</span>
+      </div>
+    </div>
+
+    <section class="content-section" id="features">
+      <div class="container">
+        <div class="section-heading reveal">
+          <span class="section-kicker">Everything in one place</span>
+          <h2>Less manual tracking.<br>More clarity for your business.</h2>
+          <p>Use connected sheets to keep everyday business information organised and easier to review.</p>
+        </div>
+        <div class="features-grid">
+          <article class="feature-card reveal">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h4"/></svg></div>
+            <h3>Orders in one place</h3><p>Record customer details, products, quantities, discounts, delivery charges and order status.</p>
+          </article>
+          <article class="feature-card reveal">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h8M9 17h8"/></svg></div>
+            <h3>Bill preparation</h3><p>Enter an Order ID in the bill workflow and use the template's PDF export option for a shareable bill.</p>
+          </article>
+          <article class="feature-card reveal">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="M3 8v8l9 5 9-5V8M12 13v8"/></svg></div>
+            <h3>Stock visibility</h3><p>Track opening stock, quantities sold and current stock, with low-stock flags based on your chosen limit.</p>
+          </article>
+          <article class="feature-card reveal">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></svg></div>
+            <h3>Payment follow-ups</h3><p>See paid, partial and pending amounts, plus remaining balances for customer orders.</p>
+          </article>
+          <article class="feature-card reveal">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/><path d="m14 16 2 2 4-4"/></svg></div>
+            <h3>Customer records</h3><p>Review repeat customers, order history, total spending and pending balances, with WhatsApp reminder links.</p>
+          </article>
+          <article class="feature-card reveal">
+            <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h17M8 15l4-4 3 3 5-7"/></svg></div>
+            <h3>Expenses & overview</h3><p>Log business expenses and review key activity through the template's dashboard and monthly view.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section how-section" id="how-it-works">
+      <div class="container">
+        <div class="section-heading reveal">
+          <span class="section-kicker">Simple workflow</span>
+          <h2>Get organised in a few steps</h2>
+          <p>Set up your business details once, then use the sheets as you process orders.</p>
+        </div>
+        <div class="steps-grid">
+          <article class="step reveal"><span class="step-number">01</span><h3>Set your details</h3><p>Add your business name, phone, UPI, bill prefix and other preferences in Settings.</p></article>
+          <article class="step reveal"><span class="step-number">02</span><h3>Add products</h3><p>Enter product names, categories, cost and selling prices, and opening stock.</p></article>
+          <article class="step reveal"><span class="step-number">03</span><h3>Record orders</h3><p>Choose products, add quantities and update payment and delivery statuses.</p></article>
+          <article class="step reveal"><span class="step-number">04</span><h3>Prepare bills</h3><p>Use an Order ID in the bill workflow and export the bill as a PDF.</p></article>
+          <article class="step reveal"><span class="step-number">05</span><h3>Review & follow up</h3><p>Check dashboard summaries, stock flags, customer records and pending balances.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section" id="who-its-for">
+      <div class="container audience-grid">
+        <div class="audience-copy reveal">
+          <span class="section-kicker">Made for everyday sellers</span>
+          <h2>Small business tools, without the complicated setup.</h2>
+          <p>A practical fit for sellers who need a clearer way to track orders, stock and payments in a spreadsheet.</p>
+          <div class="audience-list">
+            <div class="audience-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h18L19 21H5L3 10Z"/><path d="M7 10a5 5 0 0 1 10 0M12 3v2"/></svg> Home businesses</div>
+            <div class="audience-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h16v12H4zM8 8V5h8v3M8 12h8"/></svg> Bakers & food sellers</div>
+            <div class="audience-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 9 2 2 4-4M7 15h10"/></svg> Instagram sellers</div>
+            <div class="audience-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18l-2 12H5L3 9Z"/><path d="M8 9V6a4 4 0 0 1 8 0v3"/></svg> Small shops</div>
+          </div>
+        </div>
+        <aside class="callout-card reveal">
+          <h3>Bring your daily business records together.</h3>
+          <p>Explore the Order + Bill + Profit Manager template and see whether its workflow fits your business.</p>
+          <a class="btn" href="https://kreato.co.in/digitaldock/3f9ea274-d27b-4673-923e-694f5d7f46cf" target="_blank" rel="noopener noreferrer">View the template <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M7 7h10v10"/></svg></a>
+        </aside>
+      </div>
+    </section>
+
+    <section class="content-section" id="faq">
+      <div class="container">
+        <div class="section-heading reveal">
+          <span class="section-kicker">Good to know</span>
+          <h2>Frequently asked questions</h2>
+          <p>A few quick details before you get started.</p>
+        </div>
+        <div class="faq-list">
+          <div class="faq-item reveal">
+            <button class="faq-question" aria-expanded="false"><span>What is this product?</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+            <div class="faq-answer">It is a Google Sheets-based Order + Bill + Profit Manager template for tracking products, orders, customers, expenses, stock and payment balances.</div>
+          </div>
+          <div class="faq-item reveal">
+            <button class="faq-question" aria-expanded="false"><span>Can I customise it for my business?</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+            <div class="faq-answer">The template includes settings for business details, bill prefix, GST preference, low-stock limit and dropdown options. Follow the product's setup instructions before using it for real records.</div>
+          </div>
+          <div class="faq-item reveal">
+            <button class="faq-question" aria-expanded="false"><span>Does it send WhatsApp reminders automatically?</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+            <div class="faq-answer">No. It can provide a WhatsApp reminder link for a customer with a pending balance, but you review and send the message yourself.</div>
+          </div>
+          <div class="faq-item reveal">
+            <button class="faq-question" aria-expanded="false"><span>Do I need to set it up before using it?</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+            <div class="faq-answer">Yes. Set up the template and enter your business details and products first. Check the product instructions and test the workflow with sample data before relying on it for business records.</div>
+          </div>
+          <div class="faq-item reveal">
+            <button class="faq-question" aria-expanded="false"><span>Does the dashboard show my real data in this preview?</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>
+            <div class="faq-answer">No. The numbers shown in this landing page are illustrative design examples only. Your actual data would be managed in the spreadsheet template after setup.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="final-cta">
+      <div class="container">
+        <div class="final-cta-box reveal">
+          <span class="section-kicker">Ready to get organised?</span>
+          <h2>Make order tracking feel more manageable.</h2>
+          <p>Explore the template and decide if it is the right fit for the way you run your business.</p>
+          <a class="btn btn-primary" href="https://kreato.co.in/digitaldock/3f9ea274-d27b-4673-923e-694f5d7f46cf" target="_blank" rel="noopener noreferrer">Get the Template <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <a class="footer-brand" href="#home">OrderFlow</a>
+      <span>© <span id="year"></span> OrderFlow. Built for clearer business tracking.</span>
+      <div class="footer-links"><a href="#features">Features</a><a href="#faq">FAQ</a><a href="https://kreato.co.in/digitaldock/3f9ea274-d27b-4673-923e-694f5d7f46cf" target="_blank" rel="noopener noreferrer">Get template ↗</a></div>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile navigation
+    const menuToggle = document.getElementById('menuToggle');
+    const navLinks = document.getElementById('navLinks');
+
+    menuToggle.addEventListener('click', () => {
+      const isOpen = navLinks.classList.toggle('open');
+      menuToggle.setAttribute('aria-expanded', String(isOpen));
+      menuToggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+    });
+
+    navLinks.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        navLinks.classList.remove('open');
+        menuToggle.setAttribute('aria-expanded', 'false');
+        menuToggle.setAttribute('aria-label', 'Open navigation menu');
+      });
+    });
+
+    // FAQ accordion
+    document.querySelectorAll('.faq-question').forEach((button) => {
+      button.addEventListener('click', () => {
+        const item = button.closest('.faq-item');
+        const isOpen = item.classList.toggle('open');
+        button.setAttribute('aria-expanded', String(isOpen));
+      });
+    });
+
+    // Subtle reveal animation, with reduced-motion support in CSS
+    const revealItems = document.querySelectorAll('.reveal');
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            obs.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+      revealItems.forEach((item) => observer.observe(item));
+    } else {
+      revealItems.forEach((item) => item.classList.add('visible'));
+    }
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
